@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { ethers, BigNumber } from "ethers";
 import { Promise } from "bluebird";
-import farms from "../config/constants/farms";
+import farms from "config/constants/farms";
 
 function mapStateToProps(state) {
   return { walletAddr: state.walletAddr, tokenInfo: state.tokenInfo };
@@ -34,10 +34,7 @@ function DetailTable({ walletAddr }) {
       let err = false;
       let res, amount, rewardDebt;
       try {
-        res = await mainStaking.userInfo(
-          farm.pid,
-          "0x8181e3759fe397706f6f859c7e71496bf403723d"
-        );
+        res = await mainStaking.userInfo(farm.pid, walletAddr);
         amount = BigNumber.from(res[0].toString()) / 1e18;
         rewardDebt = BigNumber.from(res[1].toString()) / 1e18;
       } catch (error) {
