@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { ethers, BigNumber } from "ethers";
 import { Promise } from "bluebird";
-import farms from "config/constants/farms";
+import farms from "../config/constants/farms";
 
 function mapStateToProps(state) {
   return { walletAddr: state.walletAddr, tokenInfo: state.tokenInfo };
@@ -19,39 +19,39 @@ function DetailTable({ walletAddr }) {
   const [farmList, setFarmList] = useState([]);
   const [repList, setRepList] = useState([]);
 
-  function getUserLpAmountList() {
-    const NETWORK_URL = "https://bsc-dataseed1.defibit.io"; //const NETWORK_URL = "https://bsc-dataseed1.binance.org/";
-    const provider = new ethers.providers.JsonRpcProvider(NETWORK_URL);
-    const mainStaking = new ethers.Contract(
-      "0x73feaa1eE314F8c655E354234017bE2193C9E24E",
-      [
-        "function userInfo(uint256 pid, address wallet) external view returns (uint256 amount, uint256 reward)",
-      ],
-      provider
-    );
-
-    return Promise.map(farms.slice(0, 30), async (farm, i) => {
-      let err = false;
-      let res, amount, rewardDebt;
-      try {
-        res = await mainStaking.userInfo(farm.pid, walletAddr);
-        amount = BigNumber.from(res[0].toString()) / 1e18;
-        rewardDebt = BigNumber.from(res[1].toString()) / 1e18;
-      } catch (error) {
-        err = true;
-      }
-      if (!err) {
-        return {
-          farm: farm.lpSymbol,
-          pid: farm.pid,
-          amount: amount,
-          rewardDebt: rewardDebt,
-        };
-      }
-    });
-  }
-
   useEffect(() => {
+    const getUserLpAmountList = () => {
+      const NETWORK_URL = "https://bsc-dataseed1.defibit.io"; //const NETWORK_URL = "https://bsc-dataseed1.binance.org/";
+      const provider = new ethers.providers.JsonRpcProvider(NETWORK_URL);
+      const mainStaking = new ethers.Contract(
+        "0x73feaa1eE314F8c655E354234017bE2193C9E24E",
+        [
+          "function userInfo(uint256 pid, address wallet) external view returns (uint256 amount, uint256 reward)",
+        ],
+        provider
+      );
+
+      return Promise.map(farms /*.slice(0, 50)*/, async (farm, i) => {
+        let err = false;
+        let res, amount, rewardDebt;
+        try {
+          res = await mainStaking.userInfo(farm.pid, walletAddr);
+          amount = BigNumber.from(res[0].toString()) / 1e18;
+          rewardDebt = BigNumber.from(res[1].toString()) / 1e18;
+        } catch (error) {
+          err = true;
+        }
+        if (!err) {
+          return {
+            farm: farm.lpSymbol,
+            pid: farm.pid,
+            amount: amount,
+            rewardDebt: rewardDebt,
+          };
+        }
+      });
+    };
+
     if (walletAddr === "Connect") {
       setRepList([]);
       setFarmList([]);
@@ -133,13 +133,15 @@ function DetailTable({ walletAddr }) {
             <tbody>
               {!!repList &&
                 repList.map((e, index) => {
-                  return (
-                    <tr key={index}>
-                      <td>{e.farm}</td>
-                      <td>{e.amount}</td>
-                      <td>{e.rewardDebt}</td>
-                    </tr>
-                  );
+                  if (e.amount) {
+                    return (
+                      <tr key={index}>
+                        <td>{e.farm}</td>
+                        <td>{e.amount}</td>
+                        <td>{e.rewardDebt}</td>
+                      </tr>
+                    );
+                  }
                 })}
             </tbody>
           </table>
