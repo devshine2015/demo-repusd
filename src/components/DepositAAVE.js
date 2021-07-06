@@ -89,14 +89,12 @@ function AaveDeposit({ walletAddr }) {
   }
 
   async function getDepositsList() {
+    console.log(walletAddr);
     return Promise.map(reserves, async (reserve, i) => {
       let err = false;
       let deposit = 0;
       try {
-        deposit = await getDeposit(
-          reserve.aTokenAddress,
-          "0xD935340A520ca5A23134b91a9E54d28bf00a299f"
-        );
+        deposit = await getDeposit(reserve.aTokenAddress, walletAddr);
       } catch (error) {
         console.log("catch,", error);
         err = true;
